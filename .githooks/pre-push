@@ -1,0 +1,201 @@
+#!/bin/bash
+
+function main() {
+    check_version
+    check_empty_folder
+    check_big_files
+
+    check_prerequisites
+    check 'prerequisites' $?
+    log "[✔] Verify prerequisites"
+
+    compile
+    check 'compile' $?
+    log "[✔] Compiling"
+
+    unittest
+    check 'unittest' $?
+    log "[✔] Unit Tests"
+
+    coverage
+    log "[✔] coverage"
+
+    sca
+    log "[✔] Sca"
+    
+function coverage() {
+    go mod download golang.org/x/tools
+    go test ./... -coverprofile cover.out
+    go tool cover -html=cover.out
+}
+
+function sca_analysis() {
+    govulncheck ./...
+}
+
+    log_color "Every control are checked" "green"
+}
+
+###
+# Check return code of command (restore, build, test ...)
+# $1: action to be verified
+# $2: return code of the action (0 = executed, other=action on error)
+###
+function check() {
+    action=$1
+    result_code=$2
+
+    case $action in
+    'prerequisites')
+        [ $result_code != 0 ] && log_color "Error: dotnet command is not available.\ngit push canceled" "red" && exit 1
+        ;;
+
+    'restore')
+        [ $result_code != 0 ] && log_color "Error: Impossible to restore the project $(${SLN_PATH}).\ngit push canceled" "red" && exit 1
+        ;;
+
+    'compile')
+        [ $result_code != 0 ] && log_color "Error: Impossible to build the project $(${SLN_PATH}).\ngit push canceled" "red" && exit 1
+        ;;
+
+    'unittest')
+        [ $result_code != 0 ] && log_color "Unit tests are not all passed.\ngit push canceled" "red" && exit 1
+        ;;
+    esac
+}
+
+function check_version() {
+    last_tag=$(git tag | tail -n 1)
+    if [ -z ${last_tag} ];then
+        return 0
+    fi
+    last_version=$(echo "${last_tag}" | grep -oP "\K[0-9].[0-9].[0-9]")
+
+    file_version="./DopplerSetup/DopplerSetup.vdproj"
+
+    regex="\"ProductVersion\" = \"8:\K([0-9].[0-9].[0-9])"
+    current_version=$(grep -Po "${regex}" "${file_version}")
+
+    vercomp ${current_version} ${last_version}
+    result=$?
+    case ${result} in
+        0) op='=';;
+        1) op='>';;
+        2) op='<';;
+    esac
+    if [ ${op} == "=" ] || [ ${op} == "<" ];then 
+        log "$(log_color "Careful your version is downgraded current:" "yellow") $(log_color "${current_version}" "red") $(log_color "last:" "yellow") $(log_color "${last_version}" "red")"
+    fi
+}
+
+function check_empty_folder(){
+    folders=$(find . -type d -empty -not -path "./.git/*" -not -path "**obj/*" -not -path "**bin/*")
+    for folder in ${folders[@]};do
+        log_color "the folder \"${folder}\" is empty" "yellow"
+    done
+}
+
+## Ignorer aussi ceux du gitignore du coup prendre ceux qui sont trackés par git
+function check_big_files() {
+    size=5M
+    files=$(find . -type f -size +${size} -not -path "./.git/*")
+    for file in ${files[@]};do
+        log_color "the file \"${file}\" > ${size}" "yellow"
+    done
+}
+
+function check_prerequisites() {
+    which go >/dev/null
+}
+
+function compile() {
+    make
+    return $?
+}
+
+function unittest() {
+    go test ./...
+    return $?
+}
+
+function coverage() {
+    go mod download golang.org/x/tools
+    go test ./... -coverprofile cover.out
+    go tool cover -html=cover.out
+}
+
+function sca() {
+    govulncheck ./...
+}
+
+################################################################### Utils functions ###################################################################
+
+###
+# Compare version semver
+# $1: [string], semver version compared (ex: 1.0.0)
+# $2: [string], semver version to compare (ex: 1.1.1)
+# returns: 0 if equal, 1 if $1 < $2, 2 if $1 > $2
+###
+vercomp () {
+    if [[ $1 == $2 ]]
+    then
+        return 0
+    fi
+    local IFS=.
+    local i ver1=($1) ver2=($2)
+    # fill empty fields in ver1 with zeros
+    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
+    do
+        ver1[i]=0
+    done
+    for ((i=0; i<${#ver1[@]}; i++))
+    do
+        if ((10#${ver1[i]:=0} > 10#${ver2[i]:=0}))
+        then
+            return 1
+        fi
+        if ((10#${ver1[i]} < 10#${ver2[i]}))
+        then
+            return 2
+        fi
+    done
+    return 0
+}
+
+function get_datetime {
+    log $(date '+%Y-%m-%d %H:%M:%S')
+}
+
+function log {
+    echo -e $@
+}
+
+function log_color {
+    message=$1
+    color=$2
+    log ${COLORS[$color]}$message${COLORS[nc]}
+}
+
+typeset -A COLORS=(
+    [default]='\033[0;39m'
+    [black]='\033[0;30m'
+    [red]='\033[0;31m'
+    [green]='\033[0;32m'
+    [yellow]='\033[0;33m'
+    [blue]='\033[0;34m'
+    [magenta]='\033[0;35m'
+    [cyan]='\033[0;36m'
+    [light_gray]='\033[0;37m'
+    [light_grey]='\033[0;37m'
+    [dark_gray]='\033[0;90m'
+    [dark_grey]='\033[0;90m'
+    [light_red]='\033[0;91m'
+    [light_green]='\033[0;92m'
+    [light_yellow]='\033[0;93m'
+    [light_blue]='\033[0;94m'
+    [light_magenta]='\033[0;95m'
+    [light_cyan]='\033[0;96m'
+    [nc]='\033[0m' # No Color
+)
+
+main "$@"

@@ -7,4 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Project releases
 
-### 0.0.1 - June, 21st 2021 - Init project
+### 0.0.2 - April, 7th 2026 - Init project
+
+#### Added
+
+- Add bubbletea interface
+
+### 0.0.1 - April, 6th 2026 - Init project

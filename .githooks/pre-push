@@ -22,16 +22,6 @@ function main() {
 
     sca
     log "[✔] Sca"
-    
-function coverage() {
-    go mod download golang.org/x/tools
-    go test ./... -coverprofile cover.out
-    go tool cover -html=cover.out
-}
-
-function sca_analysis() {
-    govulncheck ./...
-}
 
     log_color "Every control are checked" "green"
 }
@@ -71,9 +61,9 @@ function check_version() {
     fi
     last_version=$(echo "${last_tag}" | grep -oP "\K[0-9].[0-9].[0-9]")
 
-    file_version="./DopplerSetup/DopplerSetup.vdproj"
+    file_version="Makefile"
 
-    regex="\"ProductVersion\" = \"8:\K([0-9].[0-9].[0-9])"
+    regex="\K([0-9].[0-9].[0-9])"
     current_version=$(grep -Po "${regex}" "${file_version}")
 
     vercomp ${current_version} ${last_version}
@@ -95,7 +85,6 @@ function check_empty_folder(){
     done
 }
 
-## Ignorer aussi ceux du gitignore du coup prendre ceux qui sont trackés par git
 function check_big_files() {
     size=5M
     files=$(find . -type f -size +${size} -not -path "./.git/*")
@@ -118,8 +107,8 @@ function unittest() {
     return $?
 }
 
+## Need to install: go get golang.org/x/tools
 function coverage() {
-    go mod download golang.org/x/tools
     go test ./... -coverprofile cover.out
     go tool cover -html=cover.out
 }

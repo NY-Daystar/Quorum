@@ -1,11 +1,17 @@
 
 APP_NAME="Quorum"
-APP_VERSION="0.0.1"
+APP_VERSION="0.0.2"
 
-.PHONY: setup clean build-linux build-windows build-mac run test doc coverage sca list
+.PHONY: start, end, setup clean build-linux build-windows build-mac run test doc coverage sca list
 
 # Package executables for all OS after built-in
-all: setup build-windows build-linux build-mac 
+all: start setup build-windows build-linux build-mac end
+
+start:
+	@echo "Starting build"
+
+end:
+	@echo "Build successful"	
 
 setup:
 	@rm -rf build/*

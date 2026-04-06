@@ -114,7 +114,9 @@ func BackupMails(service *gmail.Service, cfg *config.Config, log *zap.Logger, la
 func getLabelMailList(service *gmail.Service, labelID string, cfg *config.Config) ([]*gmail.Message, error) {
 	user := "me"
 
-	res, err := service.Users.Messages.List(user).LabelIds(labelID).MaxResults(cfg.MaxResults).Do() // TODO le maxResult est par defaut ilimité mettre un flag pour gérer
+	res, err := service.Users.Messages.List(user).LabelIds(labelID).MaxResults(cfg.MaxResults).Do()
+	// TODO le maxResult est par defaut ilimité mettre un flag pour gérer
+	// TODO on est limité à 500 mails par labels voir comment faire sauter cette limite
 
 	if err != nil {
 		return nil, err

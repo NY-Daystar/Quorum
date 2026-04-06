@@ -76,3 +76,34 @@ func SanitizeFilename(s string) string {
 	}
 	return result
 }
+
+// CalculateFolderSize return size of folder
+func CalculateFolderSize(path string) string {
+	var size int64
+
+	filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
+		if err == nil && !info.IsDir() {
+			size += info.Size()
+		}
+		return nil
+	})
+
+	return formatSize(size)
+}
+
+func formatSize(size int64) string {
+	const (
+		KB = 1024
+		MB = KB * 1024
+		GB = MB * 1024
+	)
+
+	switch {
+	case size >= GB:
+		return fmt.Sprintf("%.2f Go", float64(size)/GB)
+	case size >= MB:
+		return fmt.Sprintf("%.2f Mo", float64(size)/MB)
+	default:
+		return fmt.Sprintf("%.2f Ko", float64(size)/KB)
+	}
+}

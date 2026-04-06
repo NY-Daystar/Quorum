@@ -32,7 +32,7 @@
 This application allows to backup your mail from gmail
 
 1. Download `Quorum.exe` project from
-   [this link](https://github.com/NY-Daystar/Quorum/releases/download/v0.0.1/Quorum.exe)
+   [this link](https://github.com/NY-Daystar/Quorum/releases/download/v0.0.2/Quorum.exe)
 
 1. Then setup your [gmail credentials](#create-credentials)
 
@@ -101,8 +101,7 @@ This application allows to backup your mail from gmail
 
 ## Requirements
 
-- [.NET Framework](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) >= 7.0
-- For developpment: [VS 2022](https://visualstudio.microsoft.com/fr/vs/) >= 2022
+- [Golang](https://go.dev/dl/#stable) >= 1.26
 
 ## Get started
 

@@ -2,7 +2,9 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"reflect"
 )
 
 const rootPath = "./config.json"
@@ -12,15 +14,13 @@ type Config struct {
 	Label     string // Specific label to backup
 	Anonymize bool   // if false we save file with date_object
 	Port      int64  // Port to launch server to wait authentication code in google service
+	Path      string // Path to config file
 
-	OutputDir string `json:"output_dir"`
-
-	MaxResults int64 `json:"max_results"`
-
-	//Since           string `json:"since"` // TODO a voir avec un flags
+	//Since           string `json:"since"` // TODO to handle (sample: --since 2024-01-01)
+	OutputDir       string `json:"output_dir"`
+	MaxResults      int64  `json:"max_results"`
 	CredentialsFile string `json:"credentials_file"`
 	TokenFile       string `json:"token_file"`
-	Path            string
 }
 
 // Init Create the config file the first time
@@ -29,6 +29,7 @@ func Init() *Config {
 		OutputDir:       "./backup",
 		Label:           "INBOX",
 		MaxResults:      5000,
+		Port:            AppPort,
 		CredentialsFile: "credentials.json",
 		TokenFile:       "token.json",
 		Path:            rootPath,
@@ -56,4 +57,24 @@ func Load() (*Config, error) {
 func (cfg *Config) Save() error {
 	data, _ := json.Marshal(cfg)
 	return os.WriteFile(cfg.Path, data, 0600)
+}
+
+// String display config
+func (cfg *Config) String() string {
+	val := reflect.ValueOf(cfg)
+	typ := reflect.TypeOf(cfg)
+	var result string
+
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+		typ = typ.Elem()
+	}
+
+	for i := 0; i < val.NumField(); i++ {
+		fieldName := typ.Field(i).Name
+		fieldValue := val.Field(i).Interface()
+
+		result += fmt.Sprintf("%-15s : %v\n", fieldName, fieldValue)
+	}
+	return result
 }
